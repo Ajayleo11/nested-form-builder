@@ -12,6 +12,7 @@ const DEPTH_COLORS = [
 
 export default function ClassBlock({
   cls,
+  classPath,        
   depth = 0,
   siblingClasses,
   onAttrChange,
@@ -23,17 +24,13 @@ export default function ClassBlock({
   const [collapsed, setCollapsed] = useState(false)
   const depthColor = DEPTH_COLORS[depth % DEPTH_COLORS.length]
 
-  const sourceId   = cls._sourceId ?? cls.id
-  const groupCount = siblingClasses.filter(
-    (c) => c.id === sourceId || c._sourceId === sourceId
-  ).length
-  const showRemove = groupCount > 1
+  const sameNameSiblings = siblingClasses.filter((c) => c.name === cls.name)
+  const instanceIndex    = sameNameSiblings.findIndex((c) => c.name === cls.name && siblingClasses.indexOf(c) === siblingClasses.indexOf(cls))
+  const groupCount       = sameNameSiblings.length
+  const showRemove       = cls.repeatable && groupCount > 1
 
-  
-  const attrPairs = []
-  for (let i = 0; i < cls.attributes.length; i += 2) {
-    attrPairs.push(cls.attributes.slice(i, i + 2))
-  }
+  const pathParts  = classPath.split('/')
+  const parentPath = pathParts.length > 2 ? pathParts.slice(0, -2).join('/') : ''
 
   return (
     <div
@@ -55,7 +52,9 @@ export default function ClassBlock({
           {cls.name}
         </span>
 
-        {cls._repeated && <Badge color="yellow">[{cls._idx}]</Badge>}
+        {groupCount > 1 && (
+          <Badge color="yellow">[{instanceIndex}]</Badge>
+        )}
 
         {cls.description && (
           <span className="text-xs text-gray-400 truncate min-w-0">
@@ -71,16 +70,16 @@ export default function ClassBlock({
             <IconButton
               variant="green"
               title="Add a repeat of this class"
-              onClick={() => onRepeatClass(cls.id)}
+              onClick={() => onRepeatClass(parentPath, cls.name)}
             >
               +
             </IconButton>
           )}
-          {cls.repeatable && showRemove && (
+          {showRemove && (
             <IconButton
               variant="red"
               title="Delete this instance"
-              onClick={() => onRemoveClass(cls.id)}
+              onClick={() => onRemoveClass(classPath)}
             >
               ×
             </IconButton>
@@ -93,16 +92,13 @@ export default function ClassBlock({
 
           {cls.attributes.length > 0 && (
             <div className="mb-4 space-y-3">
-              {attrPairs.map((pair, pairIdx) => (
-                <div
-                  key={pairIdx}
-                  className="grid grid-cols-2 gap-4"
-                >
+              {chunk(cls.attributes, 2).map((pair, pairIdx) => (
+                <div key={pairIdx} className="grid grid-cols-2 gap-4">
                   {pair.map((attr) => (
                     <AttributeRow
-                      key={attr.id}
+                      key={`${attr.name}-${attr._repeated ? 'r' : 'o'}-${pairIdx}`}
                       attr={attr}
-                      classId={cls.id}
+                      classPath={classPath}
                       siblingAttrs={cls.attributes}
                       onAttrChange={onAttrChange}
                       onAttrRepeat={onAttrRepeat}
@@ -115,20 +111,27 @@ export default function ClassBlock({
           )}
 
           {cls.classes?.length > 0 && (
-            <div className="space-y-0">
-              {cls.classes.map((sub) => (
-                <ClassBlock
-                  key={sub.id}
-                  cls={sub}
-                  depth={depth + 1}
-                  siblingClasses={cls.classes}
-                  onAttrChange={onAttrChange}
-                  onAttrRepeat={onAttrRepeat}
-                  onAttrRemove={onAttrRemove}
-                  onRepeatClass={onRepeatClass}
-                  onRemoveClass={onRemoveClass}
-                />
-              ))}
+            <div>
+              {cls.classes.map((sub) => {
+                const subSameName  = cls.classes.filter((c) => c.name === sub.name)
+                const subIndex     = subSameName.findIndex((c) => c === sub)
+                const subClassPath = `${classPath}/${sub.name}/${subIndex}`
+
+                return (
+                  <ClassBlock
+                    key={subClassPath}
+                    cls={sub}
+                    classPath={subClassPath}
+                    depth={depth + 1}
+                    siblingClasses={cls.classes}
+                    onAttrChange={onAttrChange}
+                    onAttrRepeat={onAttrRepeat}
+                    onAttrRemove={onAttrRemove}
+                    onRepeatClass={onRepeatClass}
+                    onRemoveClass={onRemoveClass}
+                  />
+                )
+              })}
             </div>
           )}
 
@@ -136,4 +139,10 @@ export default function ClassBlock({
       )}
     </div>
   )
+}
+
+function chunk(arr, n) {
+  const result = []
+  for (let i = 0; i < arr.length; i += n) result.push(arr.slice(i, i + n))
+  return result
 }

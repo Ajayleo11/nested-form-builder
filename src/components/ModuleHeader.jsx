@@ -27,7 +27,6 @@ export default function ModuleHeader({
       <hr className="border-gray-100 mb-4" />
 
       <div className="flex items-center gap-2 mb-3">
-        <Badge color="green">classes</Badge>
         <h3 className="font-extrabold text-sm text-gray-700 uppercase tracking-wide">
           Classes
         </h3>
@@ -36,19 +35,26 @@ export default function ModuleHeader({
         </span>
       </div>
 
-      {classes.map((cls) => (
-        <ClassBlock
-          key={cls.id}
-          cls={cls}
-          depth={0}
-          siblingClasses={classes}
-          onAttrChange={onAttrChange}
-          onAttrRepeat={onAttrRepeat}
-          onAttrRemove={onAttrRemove}
-          onRepeatClass={onRepeatClass}
-          onRemoveClass={onRemoveClass}
-        />
-      ))}
+      {classes.map((cls) => {
+        const sameNameSiblings = classes.filter((c) => c.name === cls.name)
+        const instanceIndex    = sameNameSiblings.findIndex((c) => c === cls)
+        const classPath        = `${cls.name}/${instanceIndex}`
+
+        return (
+          <ClassBlock
+            key={classPath}
+            cls={cls}
+            classPath={classPath}
+            depth={0}
+            siblingClasses={classes}
+            onAttrChange={onAttrChange}
+            onAttrRepeat={onAttrRepeat}
+            onAttrRemove={onAttrRemove}
+            onRepeatClass={onRepeatClass}
+            onRemoveClass={onRemoveClass}
+          />
+        )
+      })}
 
     </div>
   )

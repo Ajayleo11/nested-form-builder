@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { fetchSchema, saveSchema }       from '../api/schemaApi'
 import {
-  updateNodeInTree,
-  removeNodeFromTree,
+  updateAttrByPath,
   insertClassRepeat,
+  removeNodeByPath,
   insertAttrRepeat,
-  removeAttrFromClass,
+  removeAttrByPath,
 } from '../utils/treeUtils'
 import { buildDataObject } from './useDataObject'
 
@@ -33,47 +33,46 @@ export function useSchema() {
 
   const dataObject = useMemo(() => buildDataObject(schema), [schema])
 
-  const updateAttr = (classId, attrId, field, value) => {
+  const updateAttr = (classPath, attrName, attrIndex, field, value) => {
     setSchema((s) => ({
       ...s,
-      classes: updateNodeInTree(s.classes, classId, (cls) => ({
-        ...cls,
-        attributes: cls.attributes.map((a) =>
-          a.id === attrId ? { ...a, [field]: value } : a
-        ),
-      })),
+      classes: updateAttrByPath(s.classes, classPath, attrName, attrIndex, field, value),
     }))
     dirty()
   }
 
-  const repeatClass = (sourceId) => {
+
+  const repeatClass = (parentPath, sourceName) => {
     setSchema((s) => ({
       ...s,
-      classes: insertClassRepeat(s.classes, sourceId),
+      classes: insertClassRepeat(s.classes, parentPath, sourceName),
     }))
     dirty()
   }
 
-  const removeClass = (classId) => {
+
+  const removeClass = (classPath) => {
     setSchema((s) => ({
       ...s,
-      classes: removeNodeFromTree(s.classes, classId),
+      classes: removeNodeByPath(s.classes, classPath),
     }))
     dirty()
   }
 
-  const repeatAttr = (classId, attrId) => {
+
+  const repeatAttr = (classPath, attrName) => {
     setSchema((s) => ({
       ...s,
-      classes: insertAttrRepeat(s.classes, classId, attrId),
+      classes: insertAttrRepeat(s.classes, classPath, attrName),
     }))
     dirty()
   }
 
-  const removeAttr = (classId, attrId) => {
+
+  const removeAttr = (classPath, attrName, attrIndex) => {
     setSchema((s) => ({
       ...s,
-      classes: removeAttrFromClass(s.classes, classId, attrId),
+      classes: removeAttrByPath(s.classes, classPath, attrName, attrIndex),
     }))
     dirty()
   }

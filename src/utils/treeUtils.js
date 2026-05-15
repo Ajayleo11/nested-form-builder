@@ -1,68 +1,85 @@
+export function getNodeByPath(classes, path) {
+  const parts = path.split('/')         
+  let current = classes
+
+  for (let i = 0; i < parts.length; i += 2) {
+    const name  = parts[i]
+    const index = parseInt(parts[i + 1], 10)
+
+    const sameNameNodes = current.filter((c) => c.name === name)
+    const node = sameNameNodes[index]
+
+    if (!node) return null
+    if (i + 2 >= parts.length) return node  // reached the target
+
+    current = node.classes ?? []
+  }
+
+  return null
+}
 
 
-import { generateId } from './idUtils'
+export function updateNodeByPath(classes, path, updaterFn) {
+  const parts     = path.split('/')
+  const name      = parts[0]
+  const index     = parseInt(parts[1], 10)
+  const restPath  = parts.slice(2).join('/')
 
-
-function reindexSiblings(classes) {
-  const nameCounters = {}
+  let nameIndex = -1
 
   return classes.map((cls) => {
-    if (!nameCounters[cls.name]) nameCounters[cls.name] = 0
-    const idx = nameCounters[cls.name]++
+    if (cls.name !== name) return cls
 
+    nameIndex++
+
+    if (nameIndex !== index) return cls
+
+    // reached target depth
+    if (!restPath) return updaterFn(cls)
+
+    // recurse deeper
     return {
       ...cls,
-      _idx: idx,
-      classes: cls.classes?.length
-        ? reindexSiblings(cls.classes)
-        : cls.classes,
+      classes: updateNodeByPath(cls.classes ?? [], restPath, updaterFn),
     }
   })
 }
 
 
-function reindexAttrs(attributes) {
-  const nameCounters = {}
+export function removeNodeByPath(classes, path) {
+  const parts    = path.split('/')
+  const name     = parts[0]
+  const index    = parseInt(parts[1], 10)
+  const restPath = parts.slice(2).join('/')
 
-  return attributes.map((attr) => {
-    if (!nameCounters[attr.name]) nameCounters[attr.name] = 0
-    const idx = nameCounters[attr.name]++
-    return { ...attr, _idx: idx }
-  })
-}
+  let nameIndex = -1
 
+  return classes
+    .filter((cls) => {
+      if (cls.name !== name) return true      
 
-export function updateNodeInTree(classes, targetId, updaterFn) {
-  return classes.map((cls) => {
-    if (cls.id === targetId) return updaterFn(cls)
-    return {
-      ...cls,
-      classes: updateNodeInTree(cls.classes ?? [], targetId, updaterFn),
-    }
-  })
-}
+      nameIndex++
 
+      if (restPath) return true                
+      return nameIndex !== index              
+    })
+    .map((cls) => {
+      if (cls.name !== name || !restPath) return cls
 
-export function removeNodeFromTree(classes, targetId) {
-  const filtered = classes
-    .filter((cls) => cls.id !== targetId)
-    .map((cls) => ({
-      ...cls,
-      classes: removeNodeFromTree(cls.classes ?? [], targetId),
-    }))
-
-  return reindexSiblings(filtered)
+      return {
+        ...cls,
+        classes: removeNodeByPath(cls.classes ?? [], restPath),
+      }
+    })
 }
 
 
 export function cloneClassEmpty(cls) {
   return {
     ...cls,
-    id: generateId('cls'),
     _repeated: true,
     attributes: cls.attributes.map((a) => ({
       ...a,
-      id: generateId('a'),
       value: '',
     })),
     classes: (cls.classes ?? []).map(cloneClassEmpty),
@@ -70,72 +87,74 @@ export function cloneClassEmpty(cls) {
 }
 
 
-export function insertClassRepeat(classes, sourceId) {
-  const result = []
-
-  for (let i = 0; i < classes.length; i++) {
-    const cls = classes[i]
-
-    result.push({
-      ...cls,
-      classes: insertClassRepeat(cls.classes ?? [], sourceId),
-    })
-
-    const isMember = cls.id === sourceId || cls._sourceId === sourceId
-
-    if (isMember) {
-      const next = classes[i + 1]
-      const nextIsMember =
-        next && (next.id === sourceId || next._sourceId === sourceId)
-
-      if (!nextIsMember) {
-        const original = classes.find((c) => c.id === sourceId)
-        const copy = cloneClassEmpty(original)
-        copy._sourceId = sourceId
-        copy._repeated = true
-        result.push(copy)
-      }
-    }
+export function insertClassRepeat(classes, parentPath, sourceName) {
+  if (parentPath) {
+    return updateNodeByPath(classes, parentPath, (parent) => ({
+      ...parent,
+      classes: insertAtLevel(parent.classes ?? [], sourceName),
+    }))
   }
 
-  return reindexSiblings(result)
+  return insertAtLevel(classes, sourceName)
+}
+
+function insertAtLevel(classes, sourceName) {
+  const original = classes.find((c) => c.name === sourceName)
+  if (!original) return classes
+
+  const copy = cloneClassEmpty(original)
+
+  let lastIndex = -1
+  classes.forEach((c, i) => { if (c.name === sourceName) lastIndex = i })
+
+  const result = [...classes]
+  result.splice(lastIndex + 1, 0, copy)
+  return result
 }
 
 
-export function removeAttrFromClass(classes, classId, attrId) {
-  return updateNodeInTree(classes, classId, (cls) => ({
-    ...cls,
-    attributes: reindexAttrs(
-      cls.attributes.filter((a) => a.id !== attrId)
-    ),
-  }))
-}
-
-
-export function insertAttrRepeat(classes, classId, attrId) {
-  return updateNodeInTree(classes, classId, (cls) => {
-    const attrs    = [...cls.attributes]
-    const original = attrs.find(
-      (a) => a.id === attrId || a._sourceId === attrId
-    )
-    const sourceId = original._sourceId ?? attrId
-
-    const lastIdx = attrs.reduce(
-      (m, a, i) =>
-        a.id === sourceId || a._sourceId === sourceId ? i : m,
-      -1
-    )
-
-    const newAttr = {
-      ...original,
-      id: generateId('a'),
-      _sourceId: sourceId,
-      _repeated: true,
-      value: '',
+export function removeAttrByPath(classes, classPath, attrName, attrIndex) {
+  return updateNodeByPath(classes, classPath, (cls) => {
+    let nameIndex = -1
+    return {
+      ...cls,
+      attributes: cls.attributes.filter((a) => {
+        if (a.name !== attrName) return true
+        nameIndex++
+        return nameIndex !== attrIndex
+      }),
     }
+  })
+}
 
-    attrs.splice(lastIdx + 1, 0, newAttr)
 
-    return { ...cls, attributes: reindexAttrs(attrs) }
+export function insertAttrRepeat(classes, classPath, attrName) {
+  return updateNodeByPath(classes, classPath, (cls) => {
+    const original = cls.attributes.find((a) => a.name === attrName)
+    if (!original) return cls
+
+    const newAttr = { ...original, value: '', _repeated: true }
+
+    let lastIndex = -1
+    cls.attributes.forEach((a, i) => { if (a.name === attrName) lastIndex = i })
+
+    const attrs = [...cls.attributes]
+    attrs.splice(lastIndex + 1, 0, newAttr)
+    return { ...cls, attributes: attrs }
+  })
+}
+
+
+export function updateAttrByPath(classes, classPath, attrName, attrIndex, field, value) {
+  return updateNodeByPath(classes, classPath, (cls) => {
+    let nameIndex = -1
+    return {
+      ...cls,
+      attributes: cls.attributes.map((a) => {
+        if (a.name !== attrName) return a
+        nameIndex++
+        return nameIndex === attrIndex ? { ...a, [field]: value } : a
+      }),
+    }
   })
 }
