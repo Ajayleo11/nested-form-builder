@@ -2,34 +2,38 @@ import { FieldLabel, FieldWrapper, IconButton, Badge } from './ui'
 
 export default function AttributeRow({
   attr,
-  classId,
+  classPath,       
   siblingAttrs,
   onAttrChange,
   onAttrRepeat,
   onAttrRemove,
 }) {
-  const isRepeat   = Boolean(attr._repeated)
-  const sourceId   = attr._sourceId ?? attr.id
-  const groupCount = siblingAttrs.filter(
-    (a) => a.id === sourceId || a._sourceId === sourceId
-  ).length
-  const showRemove = groupCount > 1
+  const sameNameSiblings = siblingAttrs.filter((a) => a.name === attr.name)
+  const instanceIndex    = sameNameSiblings.findIndex((a) => a === attr)
+  const groupCount       = sameNameSiblings.length
+  const showRemove       = groupCount > 1
 
   return (
     <div
       className={[
         'flex flex-col gap-1',
-        isRepeat ? 'pl-2 border-l-2 border-yellow-300' : '',
+        groupCount > 1 && instanceIndex > 0
+          ? 'pl-2 border-l-2 border-yellow-300'
+          : '',
       ]
         .filter(Boolean)
         .join(' ')}
     >
-      <div className="flex items-center gap-1.5 flex-wrap">
+      <div className="flex items-center gap-1 flex-wrap">
         <FieldLabel>{attr.name}</FieldLabel>
-        <span className="text-red-500 text-sm font-bold w-2 flex-shrink-0">
-          {attr.required ? '*' : ' '}
-        </span>
-        {isRepeat && <Badge color="yellow">[{attr._idx}]</Badge>}
+
+        {attr.required && (
+          <span className="text-red-500 text-sm font-bold leading-none">*</span>
+        )}
+
+        {groupCount > 1 && (
+          <Badge color="yellow">[{instanceIndex}]</Badge>
+        )}
       </div>
 
       <div className="flex items-center gap-1.5">
@@ -37,7 +41,9 @@ export default function AttributeRow({
           type="text"
           value={attr.value}
           placeholder={`Enter ${attr.name}…`}
-          onChange={(e) => onAttrChange(classId, attr.id, 'value', e.target.value)}
+          onChange={(e) =>
+            onAttrChange(classPath, attr.name, instanceIndex, 'value', e.target.value)
+          }
           className="flex-1 rounded-md border border-gray-300 bg-white font-mono text-sm px-3 py-1.5 text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-50 focus:border-blue-400"
         />
 
@@ -46,7 +52,7 @@ export default function AttributeRow({
             variant="green"
             size="sm"
             title={`Add a repeat of "${attr.name}"`}
-            onClick={() => onAttrRepeat(classId, attr.id)}
+            onClick={() => onAttrRepeat(classPath, attr.name)}
           >
             +
           </IconButton>
@@ -57,7 +63,7 @@ export default function AttributeRow({
             variant="red"
             size="sm"
             title="Delete this instance"
-            onClick={() => onAttrRemove(classId, attr.id)}
+            onClick={() => onAttrRemove(classPath, attr.name, instanceIndex)}
           >
             ×
           </IconButton>

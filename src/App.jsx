@@ -1,6 +1,5 @@
 import { useState }          from 'react'
 import { useSchema }         from './hooks/useSchema'
-import { buildDataObject }   from './hooks/useDataObject'
 import SaveBar               from './components/SaveBar'
 import ModuleHeader          from './components/ModuleHeader'
 import { IconButton }        from './components/ui'
@@ -12,6 +11,7 @@ export default function App() {
     isDirty,
     saveState,
     saveMsg,
+    dataObject,
     load,
     updateAttr,
     repeatClass,
@@ -19,7 +19,6 @@ export default function App() {
     repeatAttr,
     removeAttr,
     save,
-    dataObject,
   } = useSchema()
 
   const [showDataObj, setShowDataObj] = useState(false)
@@ -33,7 +32,6 @@ export default function App() {
       </div>
     )
   }
-
 
   console.log('Data Object:', dataObject)
 
@@ -56,14 +54,13 @@ export default function App() {
       />
 
       {saveMsg && saveState !== 'idle' && (
-        <div
-          className={[
-            'text-xs px-3 py-2 rounded-md mb-4 border',
-            saveState === 'saved'
-              ? 'bg-green-50 text-green-700 border-green-200'
-              : 'bg-red-50 text-red-700 border-red-200',
-          ].join(' ')}
-        >
+        <div 
+        className={[
+          'text-xs px-3 py-2 rounded-md mb-4 border',
+          saveState === 'saved'
+            ? 'bg-green-50 text-green-700 border-green-200'
+            : 'bg-red-50 text-red-700 border-red-200',
+        ].join(' ')}>
           {saveMsg}
         </div>
       )}
@@ -87,11 +84,7 @@ export default function App() {
         <span className="text-xs text-gray-400">
           {Object.keys(dataObject).length} keys
         </span>
-        <IconButton
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowDataObj((v) => !v)}
-        >
+        <IconButton variant="ghost" size="sm" onClick={() => setShowDataObj((v) => !v)}>
           {showDataObj ? 'hide' : 'show'}
         </IconButton>
         {showDataObj && (
@@ -103,16 +96,7 @@ export default function App() {
 
       {showDataObj && (
         <pre className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs leading-relaxed overflow-x-auto max-h-80 overflow-y-auto">
-          {Object.entries(dataObject).map(([k, v]) => (
-            <div key={k}>
-              <span className="text-blue-600">"{k}"</span>
-              {': '}
-              <span className="text-green-700">
-                {typeof v === 'boolean' ? String(v) : `"${String(v)}"`}
-              </span>
-              {','}
-            </div>
-          ))}
+          {JSON.stringify(dataObject, null, 2)}
         </pre>
       )}
 
