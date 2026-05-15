@@ -1,16 +1,3 @@
-// src/components/ui/TextInput.jsx
-// Standard single-line text input used throughout the schema form.
-//
-// Props:
-//   value        string
-//   onChange     (value: string) => void
-//   placeholder  string
-//   label        string
-//   required     bool
-//   hint         string
-//   error        string | bool   string shows message; true just turns border red
-//   size         "sm" | "md"     default "md"
-//   disabled     bool
 
 import FieldWrapper from './FieldWrapper'
 

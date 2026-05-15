@@ -1,10 +1,3 @@
-// src/components/ui/FieldLabel.jsx
-// Uppercase label rendered above every form field.
-//
-// Props:
-//   children   ReactNode   label text
-//   required   bool        shows red * when true
-//   hint       string      small grey note e.g. "(ISO 8601)"
 
 export default function FieldLabel({ children, required = false, hint }) {
   return (

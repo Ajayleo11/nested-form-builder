@@ -1,11 +1,3 @@
-// src/components/ui/CheckboxInput.jsx
-// Checkbox with an inline label. Used for the "required" toggle on attributes.
-//
-// Props:
-//   checked    bool
-//   onChange   (checked: bool) => void
-//   label      string
-//   disabled   bool
 
 export default function CheckboxInput({
   checked = false,

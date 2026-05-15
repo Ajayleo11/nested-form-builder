@@ -1,13 +1,3 @@
-// src/components/ui/IconButton.jsx
-// Small action button used for + repeat, × remove, save, reload, copy.
-//
-// Props:
-//   onClick    fn
-//   title      string      tooltip
-//   variant    "default" | "green" | "red" | "blue" | "ghost"
-//   size       "sm" | "md"   default "md"
-//   disabled   bool
-//   children   ReactNode
 
 const VARIANTS = {
   default: 'border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700',
