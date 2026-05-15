@@ -10,8 +10,8 @@ export function buildDataObject(schema) {
 function buildClassesObject(classes) {
   if (!classes?.length) return {}
 
-  const groups = {}   
-  const order  = []   
+  const groups = {}  
+  const order  = []
 
   classes.forEach((cls) => {
     if (!groups[cls.name]) {
@@ -25,8 +25,13 @@ function buildClassesObject(classes) {
 
   order.forEach((name) => {
     const instances = groups[name]
+    const repeatable = instances[0].repeatable 
 
-    result[name] = instances.map((cls) => buildClassInstance(cls))
+    if (repeatable) {
+      result[name] = instances.map((cls) => buildClassInstance(cls))
+    } else {
+      result[name] = buildClassInstance(instances[0])
+    }
   })
 
   return result
@@ -36,34 +41,31 @@ function buildClassesObject(classes) {
 function buildClassInstance(cls) {
   const obj = {}
 
-  const attrGroups = {}
+  const attrGroups = {}  
   const attrOrder  = []
 
   cls.attributes.forEach((attr) => {
     if (!attrGroups[attr.name]) {
-      attrGroups[attr.name] = []
+      attrGroups[attr.name] = { values: [], repeatable: attr.repeatable }
       attrOrder.push(attr.name)
     }
-    attrGroups[attr.name].push(attr.value)
+    attrGroups[attr.name].values.push(attr.value)
   })
 
   attrOrder.forEach((name) => {
-    const values = attrGroups[name]
-    obj[name] = values.length === 1 ? values[0] : values
+    const { values, repeatable } = attrGroups[name]
+
+    if (repeatable) {
+      obj[name] = values
+    } else {
+      obj[name] = values[0] ?? ''
+    }
   })
 
   if (cls.classes?.length) {
-    const nestedObj = buildClassesObject(cls.classes)
-    Object.assign(obj, nestedObj)
+    const nested = buildClassesObject(cls.classes)
+    Object.assign(obj, nested)
   }
 
   return obj
-}
-
-export function getValueFromPath(dataObj, path) {
-  return path.split('/').reduce((acc, key) => {
-    if (acc === undefined || acc === null) return undefined
-    const index = parseInt(key, 10)
-    return isNaN(index) ? acc[key] : acc[index]
-  }, dataObj)
 }
