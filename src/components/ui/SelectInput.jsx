@@ -1,15 +1,3 @@
-// src/components/ui/SelectInput.jsx
-// Dropdown select. Accepts string[] or { value, label }[] for options.
-//
-// Props:
-//   value      string
-//   onChange   (value: string) => void
-//   options    string[] | { value: string, label: string }[]
-//   label      string
-//   required   bool
-//   hint       string
-//   size       "sm" | "md"
-//   disabled   bool
 
 import FieldWrapper from './FieldWrapper'
 

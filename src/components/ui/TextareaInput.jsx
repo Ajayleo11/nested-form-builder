@@ -1,17 +1,3 @@
-// src/components/ui/TextareaInput.jsx
-// Multi-line textarea — same visual style as TextInput.
-// Available for longer description fields.
-//
-// Props:
-//   value        string
-//   onChange     (value: string) => void
-//   placeholder  string
-//   label        string
-//   required     bool
-//   hint         string
-//   error        string | bool
-//   rows         number   default 3
-//   disabled     bool
 
 import FieldWrapper from './FieldWrapper'
 

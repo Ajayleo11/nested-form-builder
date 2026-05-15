@@ -1,9 +1,3 @@
-// src/components/ui/Badge.jsx
-// Small pill label — used for module, attributes, repeatable, [index] tags.
-//
-// Props:
-//   children   ReactNode
-//   color      "blue" | "green" | "orange" | "yellow" | "purple" | "red" | "gray"
 
 const COLORS = {
   blue:   'bg-blue-50   text-blue-800   border-blue-200',

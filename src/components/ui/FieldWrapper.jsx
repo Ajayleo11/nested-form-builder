@@ -1,12 +1,3 @@
-// src/components/ui/FieldWrapper.jsx
-// Wraps label + input + optional error message as one unit.
-//
-// Props:
-//   label      string
-//   required   bool
-//   hint       string
-//   error      string    red message shown below the input
-//   children   ReactNode the actual input element
 
 import FieldLabel from './FieldLabel'
 
