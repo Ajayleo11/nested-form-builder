@@ -1,16 +1,18 @@
-import { useState, useEffect }     from 'react'
-import { fetchSchema, saveSchema } from '../api/schemaApi'
+import { useState, useEffect, useMemo } from 'react'
+import { fetchSchema, saveSchema }       from '../api/schemaApi'
 import {
   updateNodeInTree,
   removeNodeFromTree,
   insertClassRepeat,
+  insertAttrRepeat,
+  removeAttrFromClass,
 } from '../utils/treeUtils'
-import { generateId } from '../utils/idUtils'
+import { buildDataObject } from './useDataObject'
 
 export function useSchema() {
   const [schema,    setSchema]    = useState(null)
   const [loading,   setLoading]   = useState(true)
-  const [saveState, setSaveState] = useState('idle')  
+  const [saveState, setSaveState] = useState('idle')
   const [saveMsg,   setSaveMsg]   = useState('')
   const [isDirty,   setIsDirty]   = useState(false)
 
@@ -29,6 +31,7 @@ export function useSchema() {
 
   const dirty = () => setIsDirty(true)
 
+  const dataObject = useMemo(() => buildDataObject(schema), [schema])
 
   const updateAttr = (classId, attrId, field, value) => {
     setSchema((s) => ({
@@ -59,40 +62,10 @@ export function useSchema() {
     dirty()
   }
 
-
   const repeatAttr = (classId, attrId) => {
     setSchema((s) => ({
       ...s,
-      classes: updateNodeInTree(s.classes, classId, (cls) => {
-        const attrs = [...cls.attributes]
-
-        const original = attrs.find(
-          (a) => a.id === attrId || a._sourceId === attrId
-        )
-        const sourceId = original._sourceId ?? attrId
-
-        const lastIdx = attrs.reduce(
-          (m, a, i) =>
-            a.id === sourceId || a._sourceId === sourceId ? i : m,
-          -1
-        )
-
-        const groupCount = attrs.filter(
-          (a) => a.id === sourceId || a._sourceId === sourceId
-        ).length
-
-        const newAttr = {
-          ...original,
-          id: generateId('a'),
-          _sourceId: sourceId,
-          _repeated: true,
-          _idx: groupCount,
-          value: '',
-        }
-
-        attrs.splice(lastIdx + 1, 0, newAttr)
-        return { ...cls, attributes: attrs }
-      }),
+      classes: insertAttrRepeat(s.classes, classId, attrId),
     }))
     dirty()
   }
@@ -100,17 +73,14 @@ export function useSchema() {
   const removeAttr = (classId, attrId) => {
     setSchema((s) => ({
       ...s,
-      classes: updateNodeInTree(s.classes, classId, (cls) => ({
-        ...cls,
-        attributes: cls.attributes.filter((a) => a.id !== attrId),
-      })),
+      classes: removeAttrFromClass(s.classes, classId, attrId),
     }))
     dirty()
   }
 
-  const save = (dataObject) => {
+  const save = (payload) => {
     setSaveState('saving')
-    saveSchema(dataObject)
+    saveSchema(payload)
       .then((res) => {
         setSaveState('saved')
         setSaveMsg(`Saved at ${new Date(res.savedAt).toLocaleTimeString()}`)
@@ -125,13 +95,12 @@ export function useSchema() {
   }
 
   return {
-    // state
     schema,
     loading,
     isDirty,
     saveState,
     saveMsg,
-    // actions
+    dataObject,
     load,
     updateAttr,
     repeatClass,

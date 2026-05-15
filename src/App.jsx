@@ -19,6 +19,7 @@ export default function App() {
     repeatAttr,
     removeAttr,
     save,
+    dataObject,
   } = useSchema()
 
   const [showDataObj, setShowDataObj] = useState(false)
@@ -33,15 +34,13 @@ export default function App() {
     )
   }
 
-  const dataObj = buildDataObject(schema)
 
-  // Log live data object to console on every render
-  console.log('📦 Data Object:', dataObj)
+  console.log('Data Object:', dataObject)
 
-  const handleSave = () => save(dataObj)
+  const handleSave = () => save(dataObject)
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(JSON.stringify(dataObj, null, 2))
+    navigator.clipboard.writeText(JSON.stringify(dataObject, null, 2))
     setCopied(true)
     setTimeout(() => setCopied(false), 1800)
   }
@@ -86,7 +85,7 @@ export default function App() {
           Data Object
         </h2>
         <span className="text-xs text-gray-400">
-          {Object.keys(dataObj).length} keys
+          {Object.keys(dataObject).length} keys
         </span>
         <IconButton
           variant="ghost"
@@ -104,7 +103,7 @@ export default function App() {
 
       {showDataObj && (
         <pre className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs leading-relaxed overflow-x-auto max-h-80 overflow-y-auto">
-          {Object.entries(dataObj).map(([k, v]) => (
+          {Object.entries(dataObject).map(([k, v]) => (
             <div key={k}>
               <span className="text-blue-600">"{k}"</span>
               {': '}

@@ -25,10 +25,10 @@ export default function AttributeRow({
         .join(' ')}
     >
       <div className="flex items-center gap-1.5 flex-wrap">
+        <FieldLabel>{attr.name}</FieldLabel>
         <span className="text-red-500 text-sm font-bold w-2 flex-shrink-0">
           {attr.required ? '*' : ' '}
         </span>
-        <FieldLabel>{attr.name}</FieldLabel>
         {isRepeat && <Badge color="yellow">[{attr._idx}]</Badge>}
       </div>
 
