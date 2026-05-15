@@ -13,7 +13,7 @@ const DEPTH_COLORS = [
 export default function ClassBlock({
   cls,
   depth = 0,
-  siblingClasses,    
+  siblingClasses,
   onAttrChange,
   onAttrRepeat,
   onAttrRemove,
@@ -27,8 +27,13 @@ export default function ClassBlock({
   const groupCount = siblingClasses.filter(
     (c) => c.id === sourceId || c._sourceId === sourceId
   ).length
-
   const showRemove = groupCount > 1
+
+  
+  const attrPairs = []
+  for (let i = 0; i < cls.attributes.length; i += 2) {
+    attrPairs.push(cls.attributes.slice(i, i + 2))
+  }
 
   return (
     <div
@@ -42,9 +47,9 @@ export default function ClassBlock({
         ].join(' ')}
         onClick={() => setCollapsed((v) => !v)}
       >
-        {/* <span className="text-gray-400 text-xs flex-shrink-0">
+        <span className="text-gray-400 text-xs flex-shrink-0">
           {collapsed ? '▶' : '▼'}
-        </span> */}
+        </span>
 
         <span className="font-bold text-sm text-gray-800 flex-shrink-0">
           {cls.name}
@@ -71,7 +76,6 @@ export default function ClassBlock({
               +
             </IconButton>
           )}
-
           {cls.repeatable && showRemove && (
             <IconButton
               variant="red"
@@ -88,37 +92,30 @@ export default function ClassBlock({
         <div className="p-4">
 
           {cls.attributes.length > 0 && (
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge color="orange">attributes</Badge>
-                <span className="text-xs text-gray-400">
-                  {cls.attributes.length} field{cls.attributes.length !== 1 ? 's' : ''}
-                </span>
-              </div>
-
-              {cls.attributes.map((attr) => (
-                <AttributeRow
-                  key={attr.id}
-                  attr={attr}
-                  classId={cls.id}
-                  siblingAttrs={cls.attributes}
-                  onAttrChange={onAttrChange}
-                  onAttrRepeat={onAttrRepeat}
-                  onAttrRemove={onAttrRemove}
-                />
+            <div className="mb-4 space-y-3">
+              {attrPairs.map((pair, pairIdx) => (
+                <div
+                  key={pairIdx}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  {pair.map((attr) => (
+                    <AttributeRow
+                      key={attr.id}
+                      attr={attr}
+                      classId={cls.id}
+                      siblingAttrs={cls.attributes}
+                      onAttrChange={onAttrChange}
+                      onAttrRepeat={onAttrRepeat}
+                      onAttrRemove={onAttrRemove}
+                    />
+                  ))}
+                </div>
               ))}
             </div>
           )}
 
           {cls.classes?.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Badge color="green">nested classes</Badge>
-                <span className="text-xs text-gray-400">
-                  {cls.classes.length} class{cls.classes.length !== 1 ? 'es' : ''}
-                </span>
-              </div>
-
+            <div className="space-y-0">
               {cls.classes.map((sub) => (
                 <ClassBlock
                   key={sub.id}
