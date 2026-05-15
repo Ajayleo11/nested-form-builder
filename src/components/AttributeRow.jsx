@@ -1,19 +1,28 @@
-import { FieldLabel, FieldWrapper, CheckboxInput, IconButton, Badge } from './ui'
+import { FieldLabel, FieldWrapper, IconButton, Badge } from './ui'
 
 export default function AttributeRow({
   attr,
   classId,
+  siblingAttrs,     
   onAttrChange,
   onAttrRepeat,
   onAttrRemove,
 }) {
   const isRepeat = Boolean(attr._repeated)
 
+
+  const sourceId   = attr._sourceId ?? attr.id
+  const groupCount = siblingAttrs.filter(
+    (a) => a.id === sourceId || a._sourceId === sourceId
+  ).length
+
+  const showRemove = groupCount > 1
+
   return (
     <div
       className={[
         'grid items-end gap-2 mb-2',
-        'grid-cols-[minmax(0,2fr)_auto_auto_auto]',
+        'grid-cols-[minmax(0,1fr)_auto]',
         isRepeat ? 'pl-2 border-l-2 border-yellow-300' : '',
       ]
         .filter(Boolean)
@@ -21,14 +30,21 @@ export default function AttributeRow({
     >
       <FieldWrapper>
         <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-          <FieldLabel required={attr.required}>{attr.name}</FieldLabel>
+          <FieldLabel>{attr.name}</FieldLabel>
+
+          {attr.required && (
+            <span className="text-[9px] font-semibold uppercase tracking-wider text-red-500 border border-red-200 bg-red-50 rounded px-1.5 py-0.5">
+              required
+            </span>
+          )}
+
           <span className="text-[10px] font-mono text-gray-400 bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5">
             {attr.type}
           </span>
-          {isRepeat && (
-            <Badge color="yellow">[{attr._idx}]</Badge>
-          )}
+
+          {isRepeat && <Badge color="yellow">[{attr._idx}]</Badge>}
         </div>
+
         <input
           type="text"
           value={attr.value}
@@ -38,16 +54,6 @@ export default function AttributeRow({
         />
       </FieldWrapper>
 
-      {/* ── Required checkbox ── */}
-      <div className="flex flex-col gap-1 pb-0.5">
-        <FieldLabel>Req.</FieldLabel>
-        <CheckboxInput
-          checked={attr.required}
-          onChange={(v) => onAttrChange(classId, attr.id, 'required', v)}
-        />
-      </div>
-
-      
       <div className="flex items-end gap-1 pb-0.5">
         {attr.repeatable && (
           <IconButton
@@ -58,7 +64,8 @@ export default function AttributeRow({
             +
           </IconButton>
         )}
-        {isRepeat && (
+
+        {showRemove && (
           <IconButton
             variant="red"
             title="Delete this instance"
