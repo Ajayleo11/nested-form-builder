@@ -1,6 +1,6 @@
-import { useState }                  from 'react'
-import AttributeRow                  from './AttributeRow'
-import { IconButton, Badge }         from './ui'
+import { useState }          from 'react'
+import AttributeRow          from './AttributeRow'
+import { IconButton, Badge } from './ui'
 
 const DEPTH_COLORS = [
   'border-l-emerald-400',
@@ -13,6 +13,7 @@ const DEPTH_COLORS = [
 export default function ClassBlock({
   cls,
   depth = 0,
+  siblingClasses,    
   onAttrChange,
   onAttrRepeat,
   onAttrRemove,
@@ -20,8 +21,14 @@ export default function ClassBlock({
   onRemoveClass,
 }) {
   const [collapsed, setCollapsed] = useState(false)
-  const isRepeat   = Boolean(cls._repeated)
   const depthColor = DEPTH_COLORS[depth % DEPTH_COLORS.length]
+
+  const sourceId   = cls._sourceId ?? cls.id
+  const groupCount = siblingClasses.filter(
+    (c) => c.id === sourceId || c._sourceId === sourceId
+  ).length
+
+  const showRemove = groupCount > 1
 
   return (
     <div
@@ -43,7 +50,7 @@ export default function ClassBlock({
           {cls.name}
         </span>
 
-        {isRepeat && <Badge color="yellow">[{cls._idx}]</Badge>}
+        {cls._repeated && <Badge color="yellow">[{cls._idx}]</Badge>}
 
         {cls.description && (
           <span className="text-xs text-gray-400 truncate min-w-0">
@@ -64,7 +71,8 @@ export default function ClassBlock({
               +
             </IconButton>
           )}
-          {isRepeat && (
+
+          {cls.repeatable && showRemove && (
             <IconButton
               variant="red"
               title="Delete this instance"
@@ -93,6 +101,7 @@ export default function ClassBlock({
                   key={attr.id}
                   attr={attr}
                   classId={cls.id}
+                  siblingAttrs={cls.attributes}
                   onAttrChange={onAttrChange}
                   onAttrRepeat={onAttrRepeat}
                   onAttrRemove={onAttrRemove}
@@ -115,6 +124,7 @@ export default function ClassBlock({
                   key={sub.id}
                   cls={sub}
                   depth={depth + 1}
+                  siblingClasses={cls.classes}
                   onAttrChange={onAttrChange}
                   onAttrRepeat={onAttrRepeat}
                   onAttrRemove={onAttrRemove}

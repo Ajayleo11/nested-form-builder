@@ -1,18 +1,9 @@
-// src/App.jsx
-//
-// Changes from previous version:
-//   - Removed updateModule and updateClassField (headers now, not inputs)
-//   - ModuleHeader no longer receives onChange prop
-//   - ClassBlock no longer receives onClassFieldChange prop
-//   - Data object uses path-based keys: moduleName/0/ClassName/idx/attrName/idx/value
-
 import { useState }          from 'react'
 import { useSchema }         from './hooks/useSchema'
 import { buildDataObject }   from './hooks/useDataObject'
 import SaveBar               from './components/SaveBar'
 import ModuleHeader          from './components/ModuleHeader'
-import ClassBlock            from './components/ClassBlock'
-import { Badge, IconButton } from './components/ui'
+import { IconButton }        from './components/ui'
 
 export default function App() {
   const {
@@ -44,7 +35,10 @@ export default function App() {
 
   const dataObj = buildDataObject(schema)
 
-  const handleSave  = () => save(dataObj)
+  // Log live data object to console on every render
+  console.log('📦 Data Object:', dataObj)
+
+  const handleSave = () => save(dataObj)
 
   const handleCopy = () => {
     navigator.clipboard.writeText(JSON.stringify(dataObj, null, 2))
@@ -75,32 +69,16 @@ export default function App() {
         </div>
       )}
 
-      <ModuleHeader module={schema.module} />
+      <ModuleHeader
+        module={schema.module}
+        classes={schema.classes}
+        onAttrChange={updateAttr}
+        onAttrRepeat={repeatAttr}
+        onAttrRemove={removeAttr}
+        onRepeatClass={repeatClass}
+        onRemoveClass={removeClass}
+      />
 
-      <div className="flex items-center gap-2 mb-3">
-        <Badge color="green">classes</Badge>
-        <h2 className="font-extrabold text-sm text-gray-700 uppercase tracking-wide">
-          Classes
-        </h2>
-        <span className="text-xs text-gray-400 ml-auto">
-          click any header to collapse / expand
-        </span>
-      </div>
-
-      {schema.classes.map((cls) => (
-        <ClassBlock
-          key={cls.id}
-          cls={cls}
-          depth={0}
-          onAttrChange={updateAttr}
-          onAttrRepeat={repeatAttr}
-          onAttrRemove={removeAttr}
-          onRepeatClass={repeatClass}
-          onRemoveClass={removeClass}
-        />
-      ))}
-
-      {/* ── Data object panel ─────────────────────────────────────── */}
       <hr className="my-6 border-gray-200" />
 
       <div className="flex items-center gap-3 mb-2">
